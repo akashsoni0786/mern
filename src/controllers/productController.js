@@ -12,11 +12,11 @@ const updateProduct = async (req, res) => {
     let products = await ProductModel.findByIdAndUpdate(id, req.body, { new: true });
     if (!products) {
       res.status(400).json({
-        status: "failure",
+        success: false,
       });
     }
     res.status(200).json({
-      status: "success",
+      success: true,
       message: "User data deleted successfully!",
       data: products,
     });
@@ -24,6 +24,7 @@ const updateProduct = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error", error: error });
   }
 };
+
 const getProductHandler = async (req, res) => {
   try {
     const query = req.query;
@@ -50,6 +51,7 @@ const getProductHandler = async (req, res) => {
       queryResponsePromise = queryResponsePromise.skip(skip).limit(limit);
     const result = await queryResponsePromise;
     res.status(200).json({
+      success: true,
       message: "Get products successfully",
       data: result,
     });
@@ -57,6 +59,21 @@ const getProductHandler = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+const getProductCategories = async (req,res) => {
+  try{
+      await res.status(200).json({
+        success: true,
+        message: "Get products successfully",
+        data: ["electronics", "men's clothing", "women's clothing", "jewellery"],
+      });
+  } catch(e) {
+    await res.status(200).json({
+      message: e,
+    });
+  }
+  
+}
 module.exports = {
   createProduct,
   getProducts,
@@ -64,4 +81,5 @@ module.exports = {
   updateProduct,
   deleteProduct,
   getProductHandler,
+  getProductCategories
 };

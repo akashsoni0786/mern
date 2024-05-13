@@ -1,82 +1,73 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const userRoutes = require("./routes/userRoutes");
+const authRoutes = require("./routes/authRoutes");
+const userRoutes = require('./routes/userRoutes')
 const productRoutes = require("./routes/productRoutes");
+const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
+const cookieParser = require('cookie-parser');
+dotenv.config();
+const { PORT, DB_USER, DB_PWD, SECRET_KEY } = process.env;
 const app = express();
-const url = `mongodb+srv://akash-mongo-connect:akash-mongo-connect@crud-oprn.a34mk4f.mongodb.net/?retryWrites=true&w=majority&appName=crud-oprn`;
-mongoose.connect(url).then((conn) => {
-  console.log("Connection stablished");
+app.use(cookieParser());
+const url = `mongodb+srv://${DB_USER}:${DB_PWD}@akashcluster.gv3are1.mongodb.net/?retryWrites=true&w=majority&appName=AkashCluster`;
+// `mongodb+srv://${DB_USER}:${DB_PWD}@crud-oprn.a34mk4f.mongodb.net/?retryWrites=true&w=majority&appName=crud-oprn`;
+
+mongoose.connect(url).then((conn)=>{
+    console.log("Connection stablished");
 });
 
-app.use(express.json()); // to read data from request body
-
-app.use("/api/user", userRoutes);
+app.use(express.json());
+app.use("/api/user",userRoutes);
 app.use("/api/product", productRoutes);
-app.use((err, res) => {
-  const statusValue = err.statusCode || 500;
-  const message = err.message || "Internal Server Error";
-  res.status(statusValue).json({
-    status: statusValue,
-    message: message,
-    success: false,
-  });
-});
-// Login Signup Logout--------------------------------------------
-const payload = { user: "Akash Soni" };
-app.use("/signup", (req, res) => {
-  try {
-    jwt.sign(
-      { data: payload },
-      "7yh908sd7fshf9s8d7fs9dfh984hsg",
-      { algorithm: "HS512" },
-      (err, data) => {
-        if (err) {
-          throw new Error(err.message);
-        }
 
-        res.cookie("token", data, {
-          maxAge: 30 * 60 * 1000,
-          httpOnly: true,
-        });
+const payload = {name : 'Akash Soni'};
+// app.get("/signup",(req,res)=>{
+//     try{
+//         jwt.sign({data:payload},SECRET_KEY,{algorithm:"HS256"},(err,data)=>{
+//             if(err) {
+//                 console.log("Error ")
+//                 throw new Error(err.message);
+//             }
+//             res.cookie('token',data,{
+//                 maxAge:30*60*1000,
+//                 httpOnly:true
+//             });
 
-        res.status(200).json({
-          authToken: data,
-        });
-      }
-    );
-  } catch (err) {
-    res.status(401).json({
-      status: 401,
-      message: err.message,
-      success: false,
-    });
-  }
-});
-app.get("/verify", (req, res) => {
-  try {
-    const { token } = req.cookies;
-    console.log("token ", token);
+//             res.status(200).json({
+//                 authToken : data
+//             })
+//         });
+//     }catch(e){
+//         res.status(400).json({
+//             message : e.message
+//         })
+//     }
+// })
+// app.get("/verify",(req,res)=>{
+//     try{
+//         const {token} = req.cookies;
+//         console.log("jwt",jwt)
+//         const decoded = jwt.verify(token,SECRET_KEY);
+//         res.status(200).json({
+//             authToken : "Token decoded successfully",
+//             decoded
+//         })
+//     }catch(e){
+//         res.status(400).json({
+//             message : e.message
+//         })
+//     }
+// })
+// app.get("/logout",(req,res)=>{
+//     res.clearCookie("token");
+//     res.status(200).json({
+//         message : "User loggedout successfully"
+//     })
+// })
 
-    const decoedToken = jwt.verify(token, "7yh908sd7fshf9s8d7fs9dfh984hsg");
-
-    res.status(200).json({
-      message: "token is decoded",
-      decoedToken,
-    });
-  } catch (error) {
-    res.status(400).json({
-      status: "failure",
-      message: error.message,
-    });
-  }
-});
-app.get("/logout", (req, res) => {
-  res.clearCookie("token");
-  res.status(200).json({
-    message: "user logged out successfully",
-  });
-});
-app.listen(3000, () => {
-  console.log("Working...", "http://localhost:3000");
-});
+app.use("/", authRoutes);
+// app.get("/getUser", protectRouteMiddleware, getUserProfile);
+app.listen(PORT,()=>{
+    console.log("Working...",'http://localhost:3000');
+})
